@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detección de Manos</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    canvas {
+      border: 2px solid #444;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="info">
+    <p><strong>Manos detectadas:</strong> <span id="handCount">0</span></p>
+    <p><strong>FPS:</strong> <span id="fps">0</span></p>
+  </div>
+
+  <!-- Librerías -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+
+  <script>
+    let handDetector;
+    let videoStream;
+    let detectedHands = [];
+    let skeletonConnections;
+
+    function preload() {
+      // Cargar modelo de detección de manos
+      handDetector = ml5.handPose();
+    }
+
+    function setup() {
+      createCanvas(800, 600);
+      videoStream = createCapture(VIDEO);
+      videoStream.size(width, height);
+      videoStream.hide();
+
+      // Iniciar detección
+      handDetector.detectStart(videoStream, handleDetectedHands);
+
+      // Obtener las conexiones esqueléticas de los dedos
+      skeletonConnections = handDetector.getConnections();
+
+      console.log("Conexiones cargadas:", skeletonConnections);
+    }
+
+    function handleDetectedHands(handsData) {
+      detectedHands = handsData;
+    }
+
+    function draw() {
+      background(30);
+      image(videoStream, 0, 0, width, height);
+
+      // Dibujar conexiones entre puntos clave
+      drawSkeleton(detectedHands);
+
+      // Dibujar puntos clave
+      drawKeypoints(detectedHands);
+
+      // Mostrar info en pantalla
+      updateUI(detectedHands);
+    }
+
+    function drawSkeleton(hands) {
+      noFill();
+      for (let i = 0; i < hands.length; i++) {
+        const hand = hands[i];
+        for (let j = 0; j < skeletonConnections.length; j++) {
+          const [startIdx, endIdx] = skeletonConnections[j];
+          const start = hand.keypoints[startIdx];
+          const end = hand.keypoints[endIdx];
+
+          stroke(0, 150, 255); // Color azul claro
+          strokeWeight(2);
+          line(start.x, start.y, end.x, end.y);
+        }
+      }
+    }
+
+    function drawKeypoints(hands) {
+      for (let i = 0; i < hands.length; i++) {
+        const hand = hands[i];
+        for (let j = 0; j < hand.keypoints.length; j++) {
+          const point = hand.keypoints[j];
+          fill(255, 200, 0); // Amarillo suave
+          noStroke();
+          circle(point.x, point.y, 8);
+        }
+      }
+    }
+
+    function updateUI(hands) {
+      const countSpan = document.getElementById('handCount');
+      const fpsSpan = document.getElementById('fps');
+
+      countSpan.textContent = hands.length;
+      fpsSpan.textContent = Math.round(frameRate());
+    }
+  </script>
+</body>
+</html>

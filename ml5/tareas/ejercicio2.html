@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ejercicio Mano</title>
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+
+    <script>
+        let handPose;
+        let video;
+        let hands = [];
+
+        function preload() {
+            handPose = ml5.handPose();
+        }
+
+        function setup() {
+            createCanvas(640, 480);
+            video = createCapture(VIDEO);
+            video.size(640, 480);
+            video.hide();
+
+            handPose.detectStart(video, (results) => {
+                hands = results;
+            });
+
+            console.log("Modelo HandPose cargado.");
+        }
+
+        function draw() {
+            image(video, 0, 0, width, height);
+
+            if (hands.length > 0) {
+                const hand = hands[0];
+
+                const indexTip = hand.index_finger_tip;
+                const thumbTip = hand.thumb_tip;
+
+                const pinchDist = dist(indexTip.x, indexTip.y, thumbTip.x, thumbTip.y);
+                const centerX = (indexTip.x + thumbTip.x) / 2;
+                const centerY = (indexTip.y + thumbTip.y) / 2;
+
+                // Color del círculo según distancia
+                if (pinchDist < 100) {
+                    fill(255, 0, 0, 180); // rojo
+                } else if (pinchDist < 200) {
+                    fill(255, 255, 0, 180); // amarillo
+                } else {
+                    fill(0, 255, 0, 180); // verde
+                }
+
+                stroke(50);
+                strokeWeight(2);
+                circle(centerX, centerY, pinchDist);
+
+                // Mostrar valor del pinch
+                noStroke();
+                fill(255);
+                textSize(18);
+                textAlign(LEFT, TOP);
+                text("Distancia: " + nf(pinchDist, 1, 2), 10, 10);
+            }
+        }
+    </script>
+</body>
+
+</html>

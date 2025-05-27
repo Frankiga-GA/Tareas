@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sintetizador de Voz</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 30px;
+      }
+
+      textarea {
+        width: 90%;
+        height: 100px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        padding: 10px;
+        resize: none;
+      }
+
+      button {
+        margin: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sintetizador de Voz</h1>
+    <p>Escribe un texto y haz clic en "Hablar" para escucharlo.</p>
+
+    <textarea id="texto" placeholder="Escribe algo aquí..."></textarea><br />
+
+    <button type="button" id="hablar">Hablar</button>
+    <button type="button" id="pausar">Pausar</button>
+    <button type="button" id="detener">Detener</button>
+
+    <script>
+      const btnHablar = document.querySelector("#hablar");
+      const btnPausar = document.querySelector("#pausar");
+      const btnDetener = document.querySelector("#detener");
+      const campoTexto = document.querySelector("#texto");
+
+      let mensaje;
+
+      // Función para iniciar la lectura en voz alta
+      const hablar = () => {
+        const texto = campoTexto.value.trim();
+
+        if (!texto) {
+          alert("Por favor, escribe algún texto para hablar.");
+          return;
+        }
+
+        mensaje = new SpeechSynthesisUtterance(texto);
+        speechSynthesis.speak(mensaje);
+        btnPausar.textContent = "Pausar";
+      };
+
+      // Función para pausar o reanudar
+      const pausar = () => {
+        if (speechSynthesis.speaking) {
+          if (speechSynthesis.paused) {
+            speechSynthesis.resume();
+            btnPausar.textContent = "Pausar";
+          } else {
+            speechSynthesis.pause();
+            btnPausar.textContent = "Continuar";
+          }
+        }
+      };
+
+      // Función para detener la lectura
+      const detener = () => {
+        speechSynthesis.cancel();
+        btnPausar.textContent = "Pausar";
+      };
+
+      // Eventos
+      btnHablar.addEventListener("click", hablar);
+      btnPausar.addEventListener("click", pausar);
+      btnDetener.addEventListener("click", detener);
+    </script>
+  </body>
+</html>

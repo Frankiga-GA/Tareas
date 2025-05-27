@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clasificador de Imágenes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .container {
+      display: flex;
+      border: 3px solid black;
+      padding: 20px;
+      justify-content: space-between;
+    }
+
+    .canvas-container {
+      border: 3px solid black;
+      width: 400px;
+      height: 400px;
+    }
+
+    .labels {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-left: 20px;
+      justify-content: flex-start;
+    }
+
+    .label-img {
+      border: 2px solid red;
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .bottom-bar {
+      margin-top: 20px;
+      border-top: 3px solid black;
+      padding-top: 10px;
+    }
+
+    .progress-container {
+      border: 2px solid red;
+      height: 25px;
+      position: relative;
+      margin-top: 5px;
+      width: 400px;
+    }
+
+    .progress-fill {
+      background-color: red;
+      height: 100%;
+      width: 0%;
+      color: white;
+      text-align: center;
+      font-size: 14px;
+      line-height: 25px;
+    }
+
+    .progress-label {
+      font-weight: bold;
+      color: red;
+      text-align: left;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Clasificador de Imágenes (MobileNet)</h1>
+
+  <div class="container">
+    <div class="canvas-container" id="canvas-holder"></div>
+
+    <div class="labels">
+    <img src="../img/leopardo.jpg" alt="Leopardo" class="label-img" data-animal="../img/leopardo.jpg" />
+    <img src="../img/Lobito.jpg" alt="Lobito" class="label-img" data-animal="../img/Lobito.jpg" />
+    <img src="../img/pandita.jpg" alt="Pandita" class="label-img" data-animal="../img/pandita.jpg" />
+
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="progress-label" id="label">Esperando imagen...</div>
+    <div class="progress-container">
+      <div class="progress-fill" id="progress">0%</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+
+  <script>
+    let classifier;
+    let canvas;
+    let img;
+    let imgElement;
+    let currentImage;
+
+    function preload() {
+      classifier = ml5.imageClassifier("MobileNet");
+    }
+
+    function setup() {
+      canvas = createCanvas(400, 400);
+      canvas.parent("canvas-holder");
+      background(240);
+
+      document.querySelectorAll(".label-img").forEach(el => {
+        el.addEventListener("click", () => {
+          const src = el.getAttribute("data-animal");
+          loadImage(src, loadedImg => {
+            currentImage = loadedImg;
+            image(currentImage, 0, 0, width, height);
+            classifyImage(currentImage);
+          });
+        });
+      });
+    }
+
+    function classifyImage(imgToClassify) {
+      classifier.classify(imgToClassify, (err, results) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        const label = results[0].label;
+        const confidence = Math.round(results[0].confidence * 100);
+
+        const labelDiv = document.getElementById("label");
+        labelDiv.textContent = `${results[0].label} - ${confidence}%`;
+        const progress = document.getElementById("progress");
+        progress.style.width = confidence + "%";
+        progress.textContent = confidence + "%";
+
+      });
+    }
+  </script>
+</body>
+</html>

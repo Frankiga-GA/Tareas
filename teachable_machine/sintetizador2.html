@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sintetizador de Voz Personalizado</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 600px;
+        margin: auto;
+      }
+
+      form div {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      select,
+      textarea,
+      input[type="range"] {
+        width: 100%;
+      }
+
+      button {
+        padding: 10px 20px;
+        margin-right: 10px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sintetizador de Voz</h1>
+
+    <form>
+      <div>
+        <label for="voces">Voces disponibles:</label>
+        <select name="voces" id="voces"></select>
+      </div>
+
+      <div>
+        <label for="tono">Tono:</label>
+        <input type="range" min="0" max="2" step="0.25" value="1" id="tono" />
+      </div>
+
+      <div>
+        <label for="velocidad">Velocidad:</label>
+        <input type="range" min="0" max="2" step="0.25" value="1" id="velocidad" />
+      </div>
+
+      <div>
+        <label for="volumen">Volumen:</label>
+        <input type="range" min="0" max="1" step="0.1" value="1" id="volumen" />
+      </div>
+
+      <div>
+        <label for="texto">Texto a leer:</label>
+        <textarea id="texto" rows="5">
+Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto debitis ab inventore quibusdam, corporis expedita illum magnam dolorum aliquam hic fugit unde eius. Assumenda mollitia architecto similique, sequi recusandae fugit?
+        </textarea>
+      </div>
+
+      <div>
+        <button type="button" id="hablar">Hablar</button>
+        <button type="button" id="detener">Detener</button>
+      </div>
+    </form>
+
+    <script>
+      const listaVoces = document.querySelector("#voces");
+      const tono = document.querySelector("#tono");
+      const velocidad = document.querySelector("#velocidad");
+      const volumen = document.querySelector("#volumen");
+      const texto = document.querySelector("#texto");
+      const btnHablar = document.querySelector("#hablar");
+      const btnDetener = document.querySelector("#detener");
+
+      let vocesDisponibles = [];
+
+      // Función para cargar voces
+      function cargarVoces() {
+        vocesDisponibles = speechSynthesis.getVoices();
+
+        listaVoces.innerHTML = vocesDisponibles
+          .map((voz, index) => `<option value="${index}">${voz.name} (${voz.lang})</option>`)
+          .join("");
+      }
+
+      // Cargar voces (algunos navegadores requieren esperar el evento)
+      speechSynthesis.onvoiceschanged = cargarVoces;
+      window.addEventListener("load", cargarVoces);
+
+      const hablar = () => {
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel(); // detener si ya está hablando
+        }
+
+        const mensaje = new SpeechSynthesisUtterance(texto.value);
+        const vozSeleccionada = vocesDisponibles[listaVoces.value];
+
+        if (vozSeleccionada) {
+          mensaje.voice = vozSeleccionada;
+        }
+
+        mensaje.pitch = parseFloat(tono.value);
+        mensaje.rate = parseFloat(velocidad.value);
+        mensaje.volume = parseFloat(volumen.value);
+
+        speechSynthesis.speak(mensaje);
+      };
+
+      const detener = () => {
+        speechSynthesis.cancel();
+      };
+
+      btnHablar.addEventListener("click", hablar);
+      btnDetener.addEventListener("click", detener);
+    </script>
+  </body>
+</html>
